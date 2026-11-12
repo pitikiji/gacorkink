@@ -1,4 +1,3 @@
-
 local G = (getgenv and getgenv()) or _G
 for _, key in ipairs({ "__KzoyzOpus", "__GTFarm" }) do -- __GTFarm = nama versi lama
     if G[key] and G[key].Cleanup then pcall(G[key].Cleanup) end
@@ -1026,6 +1025,19 @@ local function notify(title, content, dur)
         end)
     end)
 end
+
+local function need(parent, name, t)
+    local obj = parent:WaitForChild(name, t or 10)
+    if not obj then error("Tidak ketemu: " .. parent:GetFullName() .. "." .. name) end
+    return obj
+end
+
+local Shared = need(ReplicatedStorage, "Shared")
+local WorldRemotes = need(ReplicatedStorage, "WorldRemotes")
+local okItem, ItemDB = pcall(require, need(Shared, "ItemDB"))
+assert(okItem, "ItemDB gagal: " .. tostring(ItemDB))
+local okInv, InventoryModule = pcall(require, need(Shared, "Inventory"))
+assert(okInv, "Inventory gagal: " .. tostring(InventoryModule))
 
 ---------------------------------------------------------------------
 -- CONFIG: simpan & muat pengaturan otomatis

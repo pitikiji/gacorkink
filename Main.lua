@@ -33,18 +33,39 @@ local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
-local Shared = ReplicatedStorage:WaitForChild("Shared")
-local WorldRemotes = ReplicatedStorage:WaitForChild("WorldRemotes")
--- Remote lama (versi game sebelum ByteNet). Hanya dipakai kalau fungsi baru tidak ada.
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+-- cari objek dengan batas waktu; kalau tidak ada, beri pesan yang jelas
+local function need(parent, name, timeout)
+    local obj = parent:WaitForChild(name, timeout or 15)
+    if not obj then
+        error("[Zekio] Tidak ketemu: " .. parent:GetFullName() .. "." .. name, 0)
+    end
+    return obj
+end
+
+-- require aman
+local function req(parent, name)
+    local mod = parent:WaitForChild(name, 5)
+    if not mod then return false, "tidak ada: " .. name end
+    return pcall(require, mod)
+end
+
+local Shared = need(ReplicatedStorage, "Shared")
+local WorldRemotes = need(ReplicatedStorage, "WorldRemotes")
 local SetTileRemote = WorldRemotes:FindFirstChild("SetTile")
 
-local ItemDB = require(Shared.ItemDB)
-local InventoryModule = require(Shared.Inventory)
-local NetOk, Net = pcall(require, Shared.Net)
+local okI, ItemDB = req(Shared, "ItemDB")
+assert(okI, "[Zekio] ItemDB gagal: " .. tostring(ItemDB))
+local okV, InventoryModule = req(Shared, "Inventory")
+assert(okV, "[Zekio] Inventory gagal: " .. tostring(InventoryModule))
+local NetOk, Net = req(Shared, "Net")
 
-local GameGui = PlayerGui:WaitForChild("GameGui")
-local ParticlesOk, ParticlesModule = pcall(require, GameGui:WaitForChild("Particles"))
-local MenuModOk, MenuModule = pcall(require, GameGui:WaitForChild("WorldMenu"))
+local GameGui = need(PlayerGui, "GameGui", 30)
+local ParticlesOk, ParticlesModule = req(GameGui, "Particles")
+local MenuModOk, MenuModule = req(GameGui, "WorldMenu")
+local RolesOk, RolesModule = req(Shared, "Roles")
+local SfxOk, SfxModule = req(Shared, "Sfx")
 local RolesOk, RolesModule = pcall(require, Shared:FindFirstChild("Roles"))
 local SfxOk, SfxModule = pcall(require, Shared:FindFirstChild("Sfx"))
 
@@ -1026,18 +1047,6 @@ local function notify(title, content, dur)
     end)
 end
 
-local function need(parent, name, t)
-    local obj = parent:WaitForChild(name, t or 10)
-    if not obj then error("Tidak ketemu: " .. parent:GetFullName() .. "." .. name) end
-    return obj
-end
-
-local Shared = need(ReplicatedStorage, "Shared")
-local WorldRemotes = need(ReplicatedStorage, "WorldRemotes")
-local okItem, ItemDB = pcall(require, need(Shared, "ItemDB"))
-assert(okItem, "ItemDB gagal: " .. tostring(ItemDB))
-local okInv, InventoryModule = pcall(require, need(Shared, "Inventory"))
-assert(okInv, "Inventory gagal: " .. tostring(InventoryModule))
 
 ---------------------------------------------------------------------
 -- CONFIG: simpan & muat pengaturan otomatis
